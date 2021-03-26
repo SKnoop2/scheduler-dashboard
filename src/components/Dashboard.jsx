@@ -1,29 +1,38 @@
 import React, { Component } from "react";
+import classnames from "classnames";
+import axios from "axios";
+
 import Loading from "./Loading.jsx";
 import Panel from "./Panel.jsx";
-import classnames from "classnames";
-import axios from "axios"
+import {
+  getTotalInterviews,
+  getLeastPopularTimeSlot,
+  getMostPopularDay,
+  getInterviewsPerDay
+ } from "helpers/selectors";
+ import { setInterview } from "helpers/reducers";
 
 const data = [
   {
     id: 1,
     label: "Total Interviews",
-    value: 6
+    // use helper functions to determine values
+    getValue: getTotalInterviews
   },
   {
     id: 2,
     label: "Least Popular Time Slot",
-    value: "1pm"
+    getValue: getLeastPopularTimeSlot
   },
   {
     id: 3,
     label: "Most Popular Day",
-    value: "Wednesday"
+    getValue: getMostPopularDay
   },
   {
     id: 4,
     label: "Interviews Per Day",
-    value: "2.3"
+    getValue: getInterviewsPerDay
   }
 ];
 
@@ -52,13 +61,27 @@ class Dashboard extends Component {
       })
     })
 
+    // websocket connection updated component data in real time
+    this.socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
+
+    // listen for messages on connection 
+    // use message to update state when appts canceled or booked
+    this.socket.onmessage = event => {
+      const data = JSON.parse(event.data);
+
+      if (typeof data === "object" && data.type === "SET_INTERVIEW") {
+        this.setState(previousState =>
+          setInterview(previousState, data.id, data.interview)
+        );
+      }
+    }
+
     // once we have data we can merge it to existing state object
     const focused = JSON.parse(localStorage.getItem("focused"));
 
     if (focused) {
       this.setState({ focused });
     }
-
   }
 
   
@@ -68,6 +91,9 @@ class Dashboard extends Component {
     }
   }
 
+  componentWillUnmount() {
+    this.socket.close();
+  }
   // toggle state from 4 panel to focused view
   selectPanel(id) {
     this.setState(previousState => ({
@@ -92,7 +118,7 @@ class Dashboard extends Component {
       < Panel
         key={panel.id}
         label={panel.label}
-        value={panel.value}
+        value={panel.getValue(this.state)}
         onSelect={event => this.selectPanel(panel.id)}
       />
     ));
