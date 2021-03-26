@@ -3,6 +3,6 @@ import ReactDOM from "react-dom";
 
 import "./index.scss";
 
-import Dashboard from "components/Dashboard";
+import Dashboard from "components/Dashboard.jsx";
 
 ReactDOM.render(<Dashboard />, document.getElementById("root"));
