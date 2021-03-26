@@ -61,11 +61,18 @@ class Dashboard extends Component {
 
   }
 
-  // toggle state from 4 panel to focused view
+  
   componentDidUpdate(previousProps, previousState) {
     if (previousState.focused !== this.state.focused) {
       localStorage.setItem("focused", JSON.stringify(this.state.focused));
     }
+  }
+
+  // toggle state from 4 panel to focused view
+  selectPanel(id) {
+    this.setState(previousState => ({
+      focused: previousState.focused !== null? null : id
+    }));
   }
 
   render() {
@@ -90,7 +97,6 @@ class Dashboard extends Component {
       />
     ));
 
-    console.log("this.state", this.state)
     return (
       <main className={dashboardClasses}>{panels}</main>
     );
